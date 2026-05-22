@@ -183,7 +183,7 @@ export default function Page() {
           <div>
             <p className="mb-2 text-sm tracking-[0.24em] text-slate-500">FRONT2LINE</p>
             <h1 className="text-4xl font-semibold tracking-tight">자사몰 제품별/기간별 매출 변화 트래킹</h1>
-            <p className="mt-3 max-w-2xl text-slate-600">한 번 저장한 매출 데이터는 DB에 누적됩니다.</p>
+            <p className="mt-3 max-w-2xl text-slate-600">한 번 저장한 매출 데이터는 DB에 누적됩니다. made by 이혜원 이사 (버그 제보 환영)</p>
           </div>
           <button onClick={downloadCsv} className="rounded-2xl bg-slate-900 px-5 py-4 text-white shadow-sm">
             <Download className="mr-2 inline h-4 w-4" /> 현재 표 CSV 다운로드
@@ -215,7 +215,7 @@ export default function Page() {
             <h2 className="mb-5 text-lg font-semibold">매출 파일 누적 업로드</h2>
             <label className="block cursor-pointer rounded-2xl border border-dashed border-slate-300 p-5 hover:bg-slate-50">
               <p className="font-medium">CSV/XLSX 파일 여러 개 선택</p>
-              <p className="mt-2 text-sm leading-relaxed text-slate-500">파일명은 반드시 2026년05월05일 형식의 날짜를 포함해야 합니다. 여러 파일도 한 번에 업로드 가능합니다. 같은 날짜 데이터를 갱신할 경우 덮어쓰기를 체크해주세요.</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-500">파일명은 반드시 2026년05월05일 형식의 날짜를 포함해야 합니다. 여러 파일을 한 번에 업로드 가능합니다. 같은 날짜 데이터를 갱신할 경우 덮어쓰기를 체크해주세요.</p>
               <div className="mt-4 inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white">
                 <Upload className="mr-2 h-4 w-4" /> {isUploading ? "업로드 중..." : "파일 업로드"}
               </div>
