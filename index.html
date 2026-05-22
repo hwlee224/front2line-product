@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FRONT2LINE 제품별 매출 기간 비교 트래커</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body class="bg-[#f7f4ef] text-slate-900">
+  <div id="root" class="max-w-7xl mx-auto px-6 py-8">
+    <header class="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div>
+        <p class="mb-2 text-sm tracking-[0.24em] text-slate-500">FRONT2LINE</p>
+        <h1 class="text-4xl font-semibold tracking-tight">제품별 매출 기간 비교 트래커</h1>
+        <p class="mt-3 max-w-2xl text-slate-600">매일 업로드하는 제품별 하루 매출 파일을 합산해, 원하는 두 기간 또는 세 기간의 제품별 매출 증감을 비교합니다.</p>
+      </div>
+      <button id="downloadCsv" class="rounded-2xl px-5 py-4 shadow-sm bg-slate-900 text-white">현재 표 CSV 다운로드</button>
+    </header>
+
+    <section class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div class="rounded-3xl bg-white p-5 shadow-sm">
+        <div class="mb-3 text-sm font-medium text-slate-500">매출 파일</div>
+        <p id="fileCount" class="text-2xl font-semibold">0개 업로드</p>
+        <p class="mt-1 text-sm text-slate-500">기본 B열 제품명 / I열 매출액</p>
+      </div>
+      <div class="rounded-3xl bg-white p-5 shadow-sm">
+        <div class="mb-3 text-sm font-medium text-slate-500">A기간</div>
+        <p id="periodALabel" class="text-2xl font-semibold">05-05 ~ 05-12</p>
+        <p class="mt-1 text-sm text-slate-500">기준 기간</p>
+      </div>
+      <div class="rounded-3xl bg-white p-5 shadow-sm">
+        <div class="mb-3 text-sm font-medium text-slate-500">B기간</div>
+        <p id="periodBLabel" class="text-2xl font-semibold">05-13 ~ 05-20</p>
+        <p class="mt-1 text-sm text-slate-500">비교 기간</p>
+      </div>
+      <div class="rounded-3xl bg-white p-5 shadow-sm">
+        <div class="mb-3 text-sm font-medium text-slate-500">합산 키워드</div>
+        <p id="mergeKeywordCount" class="text-2xl font-semibold">2개 적용</p>
+        <p class="mt-1 text-sm text-slate-500">제품명 정규화</p>
+      </div>
+    </section>
+
+    <section class="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div class="rounded-3xl bg-white p-6 shadow-sm">
+        <h2 class="mb-5 text-lg font-semibold">제품별 하루 매출 업로드</h2>
+        <label class="block cursor-pointer rounded-2xl border border-dashed border-slate-300 bg-white/80 p-5 hover:bg-white">
+          <p class="font-medium">CSV/XLSX 파일 선택</p>
+          <p class="mt-2 text-sm leading-relaxed text-slate-500">파일명은 반드시 2026년05월05일 형식의 날짜를 포함해야 합니다. 날짜가 없으면 업로드되지 않습니다.</p>
+          <div class="mt-4 inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white">파일 업로드</div>
+          <input id="fileInput" type="file" multiple accept=".csv,.xlsx,.xls" class="hidden" />
+        </label>
+
+        <div class="mt-4 rounded-2xl bg-[#f7f4ef] p-4 text-sm text-slate-600">
+          <div class="grid grid-cols-2 gap-3">
+            <label>제품명 열
+              <input id="productColumn" value="B" class="mt-1 h-10 w-full rounded-xl border px-3" />
+            </label>
+            <label>매출액 열
+              <input id="salesColumn" value="I" class="mt-1 h-10 w-full rounded-xl border px-3" />
+            </label>
+          </div>
+        </div>
+        <div id="uploadedList" class="mt-4 space-y-2"></div>
+      </div>
+
+      <div class="rounded-3xl bg-white p-6 shadow-sm lg:col-span-2">
+        <h2 class="mb-5 text-lg font-semibold">비교 조건 설정</h2>
+
+        <div class="mb-5 inline-flex rounded-2xl bg-slate-100 p-1">
+          <button id="mode2" class="rounded-xl px-4 py-2 text-sm font-medium bg-white shadow-sm">2기간 비교</button>
+          <button id="mode3" class="rounded-xl px-4 py-2 text-sm font-medium text-slate-500">3기간 비교</button>
+        </div>
+
+        <div id="periodGrid" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+            <p class="mb-3 font-medium">A기간</p>
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <label class="rounded-xl bg-slate-50 p-3">시작일<br><input id="aStart" type="date" value="2026-05-05" class="mt-1 w-full bg-transparent font-semibold outline-none"></label>
+              <label class="rounded-xl bg-slate-50 p-3">종료일<br><input id="aEnd" type="date" value="2026-05-12" class="mt-1 w-full bg-transparent font-semibold outline-none"></label>
+            </div>
+            <p class="mt-3 text-sm text-slate-500">일자 수: <b id="aDays">8일</b></p>
+          </div>
+          <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+            <p class="mb-3 font-medium">B기간</p>
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <label class="rounded-xl bg-slate-50 p-3">시작일<br><input id="bStart" type="date" value="2026-05-13" class="mt-1 w-full bg-transparent font-semibold outline-none"></label>
+              <label class="rounded-xl bg-slate-50 p-3">종료일<br><input id="bEnd" type="date" value="2026-05-20" class="mt-1 w-full bg-transparent font-semibold outline-none"></label>
+            </div>
+            <p class="mt-3 text-sm text-slate-500">일자 수: <b id="bDays">8일</b></p>
+          </div>
+          <div id="periodCBox" class="hidden rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+            <p class="mb-3 font-medium">C기간</p>
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <label class="rounded-xl bg-slate-50 p-3">시작일<br><input id="cStart" type="date" value="2026-05-21" class="mt-1 w-full bg-transparent font-semibold outline-none"></label>
+              <label class="rounded-xl bg-slate-50 p-3">종료일<br><input id="cEnd" type="date" value="2026-05-28" class="mt-1 w-full bg-transparent font-semibold outline-none"></label>
+            </div>
+            <p class="mt-3 text-sm text-slate-500">일자 수: <b id="cDays">8일</b></p>
+          </div>
+        </div>
+
+        <div class="mt-5 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+          <p class="mb-2 font-medium">제품명 합산 키워드</p>
+          <p class="mb-3 text-sm text-slate-500">입력한 키워드는 제품명에서 제거한 뒤, 남은 이름이 같으면 동일 상품으로 합산합니다.</p>
+          <input id="mergeKeywords" value="[이청아 착용], [앵콜 반다]" class="h-11 w-full rounded-xl border px-3" />
+          <p class="mt-2 text-xs text-slate-400">예: [이청아 착용] 올데이무브 와이드 팬츠 → 올데이무브 와이드 팬츠</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-5">
+      <div class="rounded-3xl bg-white p-5 shadow-sm"><p class="text-sm text-slate-500">A기간 총매출</p><p id="totalA" class="mt-2 text-xl font-semibold">0원</p></div>
+      <div class="rounded-3xl bg-white p-5 shadow-sm"><p class="text-sm text-slate-500">B기간 총매출</p><p id="totalB" class="mt-2 text-xl font-semibold">0원</p></div>
+      <div id="totalCCard" class="hidden rounded-3xl bg-white p-5 shadow-sm"><p class="text-sm text-slate-500">C기간 총매출</p><p id="totalC" class="mt-2 text-xl font-semibold">0원</p></div>
+      <div class="rounded-3xl bg-white p-5 shadow-sm"><p class="text-sm text-slate-500">A→B 증감률</p><p id="totalRateAB" class="mt-2 text-xl font-semibold">-</p></div>
+      <div class="rounded-3xl bg-white p-5 shadow-sm"><p class="text-sm text-slate-500">A→B 일평균 차이</p><p id="totalAvgDiffAB" class="mt-2 text-xl font-semibold">0원</p></div>
+    </section>
+
+    <section class="rounded-3xl bg-white p-6 shadow-sm">
+      <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 class="text-xl font-semibold">제품별 매출 증감표</h2>
+          <p class="mt-1 text-sm text-slate-500">기본 정렬은 전체 기간 평균매출이 높은 제품 순입니다.</p>
+        </div>
+        <div class="flex items-center rounded-2xl border bg-white px-3">
+          <span class="mr-2 text-slate-400">검색</span>
+          <input id="searchInput" placeholder="제품명 검색" class="h-10 bg-transparent outline-none" />
+        </div>
+      </div>
+
+      <div class="overflow-auto rounded-2xl border">
+        <table class="min-w-[1200px] w-full text-sm">
+          <thead id="tableHead" class="bg-slate-50 text-slate-500"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    let rawRows = [];
+    let uploadedFiles = [];
+    let comparisonMode = "2";
+    let renderedRows = [];
+
+    function get(id) { return document.getElementById(id); }
+
+    function money(value) {
+      const num = Number(value || 0);
+      const sign = num > 0 ? "+" : num < 0 ? "-" : "";
+      return sign + Math.abs(Math.round(num)).toLocaleString("ko-KR") + "원";
+    }
+
+    function salesMoney(value) {
+      return Math.round(Number(value || 0)).toLocaleString("ko-KR") + "원";
+    }
+
+    function rateText(value) {
+      if (value === null || value === undefined || Number.isNaN(value)) return "-";
+      const rounded = Math.round(value * 1000) / 10;
+      return (value > 0 ? "+" : "") + rounded + "%";
+    }
+
+    function valueClass(value) {
+      const num = Number(value || 0);
+      if (num > 0) return "text-emerald-700";
+      if (num < 0) return "text-red-700";
+      return "text-slate-900";
+    }
+
+    function status(rate) {
+      if (rate !== null && rate >= 0.2) return '<span class="inline-flex rounded-full px-3 py-1 text-xs font-medium ring-1 bg-blue-50 text-blue-700 ring-blue-100">급상승</span>';
+      if (rate !== null && rate <= -0.2) return '<span class="inline-flex rounded-full px-3 py-1 text-xs font-medium ring-1 bg-red-50 text-red-700 ring-red-100">급하락</span>';
+      return '<span class="inline-flex rounded-full px-3 py-1 text-xs font-medium ring-1 bg-slate-100 text-slate-600 ring-slate-200">유지</span>';
+    }
+
+    function guessDateFromFileName(fileName) {
+      const yearIndex = fileName.indexOf("년");
+      const monthIndex = fileName.indexOf("월");
+      const dayIndex = fileName.indexOf("일");
+      if (yearIndex < 4 || monthIndex < yearIndex || dayIndex < monthIndex) return "";
+
+      const yearText = fileName.slice(yearIndex - 4, yearIndex);
+      if (!/^\\d{4}$/.test(yearText)) return "";
+
+      let monthText = "";
+      for (let i = yearIndex + 1; i < monthIndex; i++) {
+        const ch = fileName[i];
+        if (ch >= "0" && ch <= "9") monthText += ch;
+      }
+
+      let dayText = "";
+      for (let i = monthIndex + 1; i < dayIndex; i++) {
+        const ch = fileName[i];
+        if (ch >= "0" && ch <= "9") dayText += ch;
+      }
+
+      if (!monthText || !dayText) return "";
+      return yearText + "-" + monthText.padStart(2, "0") + "-" + dayText.padStart(2, "0");
+    }
+
+    function compactSpaces(text) {
+      let result = String(text || "").trim();
+      while (result.includes("  ")) result = result.split("  ").join(" ");
+      return result;
+    }
+
+    function normalizeProductName(name) {
+      let result = String(name || "").trim();
+      const keywords = get("mergeKeywords").value.split(",").map(k => k.trim()).filter(Boolean);
+      keywords.forEach(keyword => {
+        result = result.split(keyword).join("");
+      });
+      return compactSpaces(result);
+    }
+
+    function parseNumber(value) {
+      if (typeof value === "number") return value;
+      const cleaned = String(value || "").split(",").join("").split("원").join("").trim();
+      const parsed = Number(cleaned);
+      return Number.isNaN(parsed) ? 0 : parsed;
+    }
+
+    function columnToIndex(letter) {
+      const normalized = String(letter || "").trim().toUpperCase();
+      let result = 0;
+      for (let i = 0; i < normalized.length; i++) result = result * 26 + (normalized.charCodeAt(i) - 64);
+      return Math.max(result - 1, 0);
+    }
+
+    function dayCount(start, end) {
+      const s = new Date(start);
+      const e = new Date(end);
+      if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return 1;
+      return Math.max(Math.round((e - s) / 86400000) + 1, 1);
+    }
+
+    function getPeriods() {
+      return {
+        A: { start: get("aStart").value, end: get("aEnd").value },
+        B: { start: get("bStart").value, end: get("bEnd").value },
+        C: { start: get("cStart").value, end: get("cEnd").value }
+      };
+    }
+
+    function getPeriodSales(product, period) {
+      return rawRows
+        .map(r => ({ ...r, product: normalizeProductName(r.product) }))
+        .filter(r => r.product === product && r.date >= period.start && r.date <= period.end)
+        .reduce((sum, r) => sum + r.sales, 0);
+    }
+
+    async function handleUpload(event) {
+      const files = Array.from(event.target.files || []);
+      const productIdx = columnToIndex(get("productColumn").value);
+      const salesIdx = columnToIndex(get("salesColumn").value);
+
+      for (const file of files) {
+        const date = guessDateFromFileName(file.name);
+        if (!date) {
+          uploadedFiles.push({ fileName: file.name, date: "날짜 인식 실패", rowCount: 0 });
+          continue;
+        }
+
+        const buffer = await file.arrayBuffer();
+        const workbook = XLSX.read(buffer, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+        let rowCount = 0;
+
+        rows.slice(1).forEach(row => {
+          const product = normalizeProductName(row[productIdx]);
+          const sales = parseNumber(row[salesIdx]);
+          if (!product || !sales) return;
+          rawRows.push({ date, product, sales, fileName: file.name });
+          rowCount += 1;
+        });
+
+        uploadedFiles.push({ fileName: file.name, date, rowCount });
+      }
+
+      event.target.value = "";
+      render();
+    }
+
+    function removeFile(fileName) {
+      uploadedFiles = uploadedFiles.filter(f => f.fileName !== fileName);
+      rawRows = rawRows.filter(r => r.fileName !== fileName);
+      render();
+    }
+
+    function renderUploadedList() {
+      get("fileCount").textContent = uploadedFiles.length + "개 업로드";
+      get("uploadedList").innerHTML = uploadedFiles.map(file => `
+        <div class="flex items-center justify-between rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-slate-200">
+          <span class="truncate">${file.fileName} · ${file.date} · ${file.rowCount}행</span>
+          <button onclick="removeFile('${file.fileName.replace(/'/g, "\\'")}')" class="ml-2 rounded-full p-1 hover:bg-slate-100">✕</button>
+        </div>
+      `).join("");
+    }
+
+    function render() {
+      const periods = getPeriods();
+      const activePeriods = comparisonMode === "3" ? ["A", "B", "C"] : ["A", "B"];
+      const keyword = get("searchInput").value.toLowerCase();
+
+      get("periodALabel").textContent = periods.A.start.slice(5) + " ~ " + periods.A.end.slice(5);
+      get("periodBLabel").textContent = periods.B.start.slice(5) + " ~ " + periods.B.end.slice(5);
+      get("aDays").textContent = dayCount(periods.A.start, periods.A.end) + "일";
+      get("bDays").textContent = dayCount(periods.B.start, periods.B.end) + "일";
+      get("cDays").textContent = dayCount(periods.C.start, periods.C.end) + "일";
+      get("mergeKeywordCount").textContent = get("mergeKeywords").value.split(",").filter(x => x.trim()).length + "개 적용";
+
+      get("periodGrid").className = "grid grid-cols-1 gap-4 " + (comparisonMode === "3" ? "md:grid-cols-3" : "md:grid-cols-2");
+      get("periodCBox").className = (comparisonMode === "3" ? "" : "hidden ") + "rounded-2xl bg-white p-4 ring-1 ring-slate-200";
+      get("totalCCard").className = (comparisonMode === "3" ? "" : "hidden ") + "rounded-3xl bg-white p-5 shadow-sm";
+      get("mode2").className = "rounded-xl px-4 py-2 text-sm font-medium " + (comparisonMode === "2" ? "bg-white shadow-sm" : "text-slate-500");
+      get("mode3").className = "rounded-xl px-4 py-2 text-sm font-medium " + (comparisonMode === "3" ? "bg-white shadow-sm" : "text-slate-500");
+
+      const productSet = new Set(rawRows.map(r => normalizeProductName(r.product)).filter(Boolean));
+      let rows = Array.from(productSet).map(product => {
+        const salesA = getPeriodSales(product, periods.A);
+        const salesB = getPeriodSales(product, periods.B);
+        const salesC = getPeriodSales(product, periods.C);
+        const diffAB = salesB - salesA;
+        const rateAB = salesA ? diffAB / salesA : null;
+        const avgDiffAB = salesB / dayCount(periods.B.start, periods.B.end) - salesA / dayCount(periods.A.start, periods.A.end);
+        const diffBC = salesC - salesB;
+        const rateBC = salesB ? diffBC / salesB : null;
+        const avgDiffBC = salesC / dayCount(periods.C.start, periods.C.end) - salesB / dayCount(periods.B.start, periods.B.end);
+        const averageSales = comparisonMode === "3" ? (salesA + salesB + salesC) / 3 : (salesA + salesB) / 2;
+        return { product, salesA, salesB, salesC, diffAB, rateAB, avgDiffAB, diffBC, rateBC, avgDiffBC, averageSales };
+      }).filter(r => r.product.toLowerCase().includes(keyword))
+        .sort((a, b) => b.averageSales - a.averageSales);
+
+      renderedRows = rows;
+
+      const totals = rows.reduce((acc, r) => {
+        acc.salesA += r.salesA;
+        acc.salesB += r.salesB;
+        acc.salesC += r.salesC;
+        return acc;
+      }, { salesA: 0, salesB: 0, salesC: 0 });
+
+      totals.diffAB = totals.salesB - totals.salesA;
+      totals.rateAB = totals.salesA ? totals.diffAB / totals.salesA : null;
+      totals.avgDiffAB = totals.salesB / dayCount(periods.B.start, periods.B.end) - totals.salesA / dayCount(periods.A.start, periods.A.end);
+      totals.diffBC = totals.salesC - totals.salesB;
+      totals.rateBC = totals.salesB ? totals.diffBC / totals.salesB : null;
+      totals.avgDiffBC = totals.salesC / dayCount(periods.C.start, periods.C.end) - totals.salesB / dayCount(periods.B.start, periods.B.end);
+
+      get("totalA").textContent = salesMoney(totals.salesA);
+      get("totalB").textContent = salesMoney(totals.salesB);
+      get("totalC").textContent = salesMoney(totals.salesC);
+      get("totalRateAB").textContent = rateText(totals.rateAB);
+      get("totalRateAB").className = "mt-2 text-xl font-semibold " + valueClass(totals.rateAB);
+      get("totalAvgDiffAB").textContent = money(totals.avgDiffAB);
+      get("totalAvgDiffAB").className = "mt-2 text-xl font-semibold " + valueClass(totals.avgDiffAB);
+
+      get("tableHead").innerHTML = `
+        <tr>
+          <th class="p-3 text-left">제품명</th>
+          <th class="bg-blue-50 p-3 text-right text-blue-700">A기간 매출</th>
+          <th class="bg-red-50 p-3 text-right text-red-700">B기간 매출</th>
+          ${comparisonMode === "3" ? '<th class="bg-emerald-50 p-3 text-right text-emerald-700">C기간 매출</th>' : ''}
+          <th class="p-3 text-right">A→B 증감률</th>
+          <th class="p-3 text-right">A→B 증감액</th>
+          <th class="p-3 text-right">A→B 일평균차이</th>
+          <th class="p-3 text-center">A→B 판정</th>
+          ${comparisonMode === "3" ? '<th class="p-3 text-right">B→C 증감률</th><th class="p-3 text-right">B→C 증감액</th><th class="p-3 text-right">B→C 일평균차이</th><th class="p-3 text-center">B→C 판정</th>' : ''}
+        </tr>
+      `;
+
+      get("tableBody").innerHTML = `
+        <tr class="border-t bg-slate-50 font-semibold">
+          <td class="p-3">일자별 총매출</td>
+          <td class="bg-blue-50 p-3 text-right">${salesMoney(totals.salesA)}</td>
+          <td class="bg-red-50 p-3 text-right">${salesMoney(totals.salesB)}</td>
+          ${comparisonMode === "3" ? `<td class="bg-emerald-50 p-3 text-right">${salesMoney(totals.salesC)}</td>` : ''}
+          <td class="p-3 text-right ${valueClass(totals.rateAB)}">${rateText(totals.rateAB)}</td>
+          <td class="p-3 text-right ${valueClass(totals.diffAB)}">${money(totals.diffAB)}</td>
+          <td class="p-3 text-right ${valueClass(totals.avgDiffAB)}">${money(totals.avgDiffAB)}</td>
+          <td class="p-3 text-center">-</td>
+          ${comparisonMode === "3" ? `<td class="p-3 text-right ${valueClass(totals.rateBC)}">${rateText(totals.rateBC)}</td><td class="p-3 text-right ${valueClass(totals.diffBC)}">${money(totals.diffBC)}</td><td class="p-3 text-right ${valueClass(totals.avgDiffBC)}">${money(totals.avgDiffBC)}</td><td class="p-3 text-center">-</td>` : ''}
+        </tr>
+        ${rows.map(row => `
+          <tr class="border-t hover:bg-slate-50/70">
+            <td class="p-3 font-medium">📦 ${row.product}</td>
+            <td class="bg-blue-50/60 p-3 text-right">${salesMoney(row.salesA)}</td>
+            <td class="bg-red-50/60 p-3 text-right">${salesMoney(row.salesB)}</td>
+            ${comparisonMode === "3" ? `<td class="bg-emerald-50/60 p-3 text-right">${salesMoney(row.salesC)}</td>` : ''}
+            <td class="p-3 text-right font-semibold ${valueClass(row.rateAB)}">${rateText(row.rateAB)}</td>
+            <td class="p-3 text-right font-semibold ${valueClass(row.diffAB)}">${money(row.diffAB)}</td>
+            <td class="p-3 text-right font-semibold ${valueClass(row.avgDiffAB)}">${money(row.avgDiffAB)}</td>
+            <td class="p-3 text-center">${status(row.rateAB)}</td>
+            ${comparisonMode === "3" ? `<td class="p-3 text-right font-semibold ${valueClass(row.rateBC)}">${rateText(row.rateBC)}</td><td class="p-3 text-right font-semibold ${valueClass(row.diffBC)}">${money(row.diffBC)}</td><td class="p-3 text-right font-semibold ${valueClass(row.avgDiffBC)}">${money(row.avgDiffBC)}</td><td class="p-3 text-center">${status(row.rateBC)}</td>` : ''}
+          </tr>
+        `).join("")}
+      `;
+
+      renderUploadedList();
+    }
+
+    function downloadCsv() {
+      const header = comparisonMode === "3"
+        ? ["제품명", "A기간 매출", "B기간 매출", "C기간 매출", "A→B 증감률", "A→B 증감액", "A→B 일평균차이", "A→B 판정", "B→C 증감률", "B→C 증감액", "B→C 일평균차이", "B→C 판정"]
+        : ["제품명", "A기간 매출", "B기간 매출", "A→B 증감률", "A→B 증감액", "A→B 일평균차이", "A→B 판정"];
+
+      const body = renderedRows.map(row => {
+        const base = [row.product, row.salesA, row.salesB, rateText(row.rateAB), Math.round(row.diffAB), Math.round(row.avgDiffAB), row.rateAB >= 0.2 ? "급상승" : row.rateAB <= -0.2 ? "급하락" : "유지"];
+        if (comparisonMode === "3") base.push(row.salesC, rateText(row.rateBC), Math.round(row.diffBC), Math.round(row.avgDiffBC), row.rateBC >= 0.2 ? "급상승" : row.rateBC <= -0.2 ? "급하락" : "유지");
+        return base;
+      });
+
+      const csv = [header, ...body].map(row => row.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(",")).join("\\n");
+      const blob = new Blob(["\\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "제품별_매출_기간비교.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    get("fileInput").addEventListener("change", handleUpload);
+    get("mode2").addEventListener("click", () => { comparisonMode = "2"; render(); });
+    get("mode3").addEventListener("click", () => { comparisonMode = "3"; render(); });
+    ["aStart", "aEnd", "bStart", "bEnd", "cStart", "cEnd", "mergeKeywords", "searchInput"].forEach(id => {
+      get(id).addEventListener("input", render);
+      get(id).addEventListener("change", render);
+    });
+    get("downloadCsv").addEventListener("click", downloadCsv);
+
+    render();
+  </script>
+</body>
+</html>
