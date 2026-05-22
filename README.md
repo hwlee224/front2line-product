@@ -17,3 +17,8 @@
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
 5. GitHub 업로드 후 Vercel Deploy
+
+
+## 2026-05-22 수정
+- Supabase 기본 1,000행 조회 제한으로 일부 날짜만 조회되던 문제 수정
+- 기간 조회 및 저장 날짜 조회를 페이지네이션 방식으로 전체 행 조회하도록 개선
