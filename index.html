@@ -46,7 +46,7 @@
         <h2 class="mb-5 text-lg font-semibold">제품별 하루 매출 업로드</h2>
         <label class="block cursor-pointer rounded-2xl border border-dashed border-slate-300 bg-white/80 p-5 hover:bg-white">
           <p class="font-medium">CSV/XLSX 파일 선택</p>
-          <p class="mt-2 text-sm leading-relaxed text-slate-500">파일명은 반드시 2026년05월05일 형식의 날짜를 포함해야 합니다. 날짜가 없으면 업로드되지 않습니다.</p>
+          <p class="mt-2 text-sm leading-relaxed text-slate-500">파일명은 반드시 2026년05월05일 형식의 날짜를 포함해야 합니다. 예: 2026년05월05일.csv</p>
           <div class="mt-4 inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white">파일 업로드</div>
           <input id="fileInput" type="file" multiple accept=".csv,.xlsx,.xls" class="hidden" />
         </label>
@@ -181,7 +181,7 @@
       if (yearIndex < 4 || monthIndex < yearIndex || dayIndex < monthIndex) return "";
 
       const yearText = fileName.slice(yearIndex - 4, yearIndex);
-      if (!/^\\d{4}$/.test(yearText)) return "";
+      if (!/^\d{4}$/.test(yearText)) return "";
 
       let monthText = "";
       for (let i = yearIndex + 1; i < monthIndex; i++) {
