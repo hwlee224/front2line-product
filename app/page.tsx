@@ -51,7 +51,14 @@ export default function Page() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ keywords }),
     });
-    alert("합산 키워드를 저장했습니다.");
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.error || "합산 키워드 저장 중 오류가 발생했습니다.");
+      return;
+    }
+    alert("합산 키워드를 저장하고 기존 데이터까지 다시 정리했습니다. 새로 조회를 눌러주세요.");
+    await querySales();
+    await loadDates();
   }
 
   async function loadDates() {

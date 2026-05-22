@@ -24,5 +24,5 @@ create table if not exists app_settings (
 );
 
 insert into app_settings (key, value)
-values ('merge_keywords', '["[이청아 착용]", "[앵콜 반다]"]'::jsonb)
+values ('merge_keywords', '["[이청아 착용]", "[앵콜 반다]", "[앵콜반다]", "[주말특가]", "[팬츠야시장]"]'::jsonb)
 on conflict (key) do nothing;
