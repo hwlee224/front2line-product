@@ -2,8 +2,8 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "FRONT2LINE 제품별 매출 누적 BI",
-  description: "FRONT2LINE product sales cumulative BI",
+  title: "자사몰 제품별 매출 트래킹",
+  description: "F2L product sales cumulative",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
