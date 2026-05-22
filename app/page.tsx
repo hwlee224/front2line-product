@@ -153,26 +153,115 @@ export default function Page() {
   totals.avgDiffBC = totals.salesC / dayCount(periods.C.start, periods.C.end) - totals.salesB / dayCount(periods.B.start, periods.B.end);
 
   function downloadCsv() {
-    const header = comparisonMode === "3"
-      ? ["제품명", "A기간 매출", "B기간 매출", "C기간 매출", "A→B 증감률", "A→B 증감액", "A→B 일평균차이", "A→B 판정", "B→C 증감률", "B→C 증감액", "B→C 일평균차이", "B→C 판정"]
-      : ["제품명", "A기간 매출", "B기간 매출", "A→B 증감률", "A→B 증감액", "A→B 일평균차이", "A→B 판정"];
+    const header =
+      comparisonMode === "3"
+        ? [
+            "제품명",
+            "A기간 매출",
+            "B기간 매출",
+            "C기간 매출",
+            "A→B 증감률",
+            "A→B 증감액",
+            "A→B 일평균차이",
+            "A→B 판정",
+            "B→C 증감률",
+            "B→C 증감액",
+            "B→C 일평균차이",
+            "B→C 판정",
+          ]
+        : [
+            "제품명",
+            "A기간 매출",
+            "B기간 매출",
+            "A→B 증감률",
+            "A→B 증감액",
+            "A→B 일평균차이",
+            "A→B 판정",
+          ];
 
-    const body = computedRows.map((row) => {
-      const abStatus = row.rateAB !== null && row.rateAB >= 0.2 ? "급상승" : row.rateAB !== null && row.rateAB <= -0.2 ? "급하락" : "유지";
-      const bcStatus = row.rateBC !== null && row.rateBC >= 0.2 ? "급상승" : row.rateBC !== null && row.rateBC <= -0.2 ? "급하락" : "유지";
+    const getStatusText = (rate: number | null) => {
+      if (rate !== null && rate >= 0.2) return "급상승";
+      if (rate !== null && rate <= -0.2) return "급하락";
+      return "유지";
+    };
+
+    const totalRow =
+      comparisonMode === "3"
+        ? [
+            "총매출",
+            Math.round(totals.salesA),
+            Math.round(totals.salesB),
+            Math.round(totals.salesC),
+            rateText(totals.rateAB),
+            Math.round(totals.diffAB),
+            Math.round(totals.avgDiffAB),
+            "-",
+            rateText(totals.rateBC),
+            Math.round(totals.diffBC),
+            Math.round(totals.avgDiffBC),
+            "-",
+          ]
+        : [
+            "총매출",
+            Math.round(totals.salesA),
+            Math.round(totals.salesB),
+            rateText(totals.rateAB),
+            Math.round(totals.diffAB),
+            Math.round(totals.avgDiffAB),
+            "-",
+          ];
+
+    const bodyRows = computedRows.map((row) => {
       if (comparisonMode === "3") {
-        return [row.product, row.salesA, row.salesB, row.salesC, rateText(row.rateAB), Math.round(row.diffAB), Math.round(row.avgDiffAB), abStatus, rateText(row.rateBC), Math.round(row.diffBC), Math.round(row.avgDiffBC), bcStatus];
+        return [
+          row.product,
+          Math.round(row.salesA),
+          Math.round(row.salesB),
+          Math.round(row.salesC),
+          rateText(row.rateAB),
+          Math.round(row.diffAB),
+          Math.round(row.avgDiffAB),
+          getStatusText(row.rateAB),
+          rateText(row.rateBC),
+          Math.round(row.diffBC),
+          Math.round(row.avgDiffBC),
+          getStatusText(row.rateBC),
+        ];
       }
-      return [row.product, row.salesA, row.salesB, rateText(row.rateAB), Math.round(row.diffAB), Math.round(row.avgDiffAB), abStatus];
+
+      return [
+        row.product,
+        Math.round(row.salesA),
+        Math.round(row.salesB),
+        rateText(row.rateAB),
+        Math.round(row.diffAB),
+        Math.round(row.avgDiffAB),
+        getStatusText(row.rateAB),
+      ];
     });
 
-    const csv = [header, ...body].map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\\n");
-    const blob = new Blob(["\\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const csvRows = [header, totalRow, ...bodyRows];
+
+    const csv = csvRows
+      .map((row) =>
+        row
+          .map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`)
+          .join(",")
+      )
+      .join("\r\n");
+
+    const blob = new Blob(["\uFEFF" + csv], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const today = new Date().toISOString().slice(0, 10);
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "제품별_매출_기간비교.csv";
+    link.download = `자사몰_제품별_매출_트래킹_${today}.csv`;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }
 
@@ -183,7 +272,7 @@ export default function Page() {
           <div>
             <p className="mb-2 text-sm tracking-[0.24em] text-slate-500">FRONT2LINE</p>
             <h1 className="text-4xl font-semibold tracking-tight">자사몰 제품별/기간별 매출 변화 트래킹</h1>
-            <p className="mt-3 max-w-2xl text-slate-600">2026년 2월부터 조회 가능합니다. made by 이혜원 이사 (문의 및 버그 제보 환영)</p>
+            <p className="mt-3 max-w-2xl text-slate-600">made by 이혜원 이사 (문의 및 버그 제보 환영)</p>
           </div>
           <button onClick={downloadCsv} className="rounded-2xl bg-slate-900 px-5 py-4 text-white shadow-sm">
             <Download className="mr-2 inline h-4 w-4" /> 현재 표 CSV 다운로드
@@ -267,7 +356,7 @@ export default function Page() {
             </div>
 
             <div className="mt-5 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
-              <p className="mb-2 font-medium">제품명 합산 키워드 (수정시 저장 버튼 누른 후 팝업 뜰 때까지 기다려주세요) </p>
+              <p className="mb-2 font-medium">제품명 합산 키워드 (수정시 저장 버튼 누른 후 팝업 뜰 때까지 기다려주세요)</p>
               <textarea value={keywordsText} onChange={(e) => setKeywordsText(e.target.value)} className="h-20 w-full rounded-xl border p-3" />
               <button onClick={saveSettings} className="mt-3 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white">합산 키워드 저장</button>
             </div>
