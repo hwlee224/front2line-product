@@ -1,18 +1,16 @@
 // ============================================================================
-// [3단계] 새 파일 추가 → app/api/export/route.ts
+// [3단계 수정본] app/api/export/route.ts
+//
+// GitHub에서 app/api/export/route.ts 를 열어 ✏️Edit → 전체 지우고 → 이 내용으로 교체 → Commit
+// (이전 버전의 쿼리 조립 방식이 빌드 타입 에러를 내서, 안전한 방식으로 수정했습니다.)
 //
 // 배포 후 주소: https://f2l-product-sale-tracking.vercel.app/api/export
-// Claude(또는 외부)가 헤더 없이 URL만으로 daily_product_metrics 데이터를 읽어가는 엔드포인트.
-//
 // 사용 예:
-//   /api/export?token=○○○                              → 전체
-//   /api/export?token=○○○&date=2026-06-18              → 특정 하루
-//   /api/export?token=○○○&from=2026-02-01&to=2026-06-18 → 기간
-//   /api/export?token=○○○&format=json                  → JSON (기본은 csv)
+//   /api/export?token=○○○&date=2026-06-18
+//   /api/export?token=○○○&from=2026-02-01&to=2026-06-18
+//   /api/export?token=○○○&format=json
 //
-// 필요한 환경변수 (Vercel):
-//   NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY  → 이미 등록돼 있음 (재사용)
-//   EXPORT_TOKEN  → 이번에 새로 추가 (아무 긴 문자열)
+// 환경변수: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (재사용), EXPORT_TOKEN (신규)
 // ============================================================================
 
 import { NextResponse } from "next/server";
@@ -59,24 +57,26 @@ export async function GET(request: Request) {
   const pageSize = 1000;
   let offset = 0;
   const all: Record<string, unknown>[] = [];
+
   while (true) {
-    let q = supabaseAdmin
-      .from("daily_product_metrics")
-      .select(COLUMNS.join(","));
+    // 필터 단계 (eq/gte/lte 는 같은 타입을 반환하므로 재대입해도 안전)
+    let filtered = supabaseAdmin.from("daily_product_metrics").select(COLUMNS.join(","));
     if (date) {
-      q = q.eq("sale_date", date);
+      filtered = filtered.eq("sale_date", date);
     } else {
-      if (from) q = q.gte("sale_date", from);
-      if (to) q = q.lte("sale_date", to);
+      if (from) filtered = filtered.gte("sale_date", from);
+      if (to) filtered = filtered.lte("sale_date", to);
     }
-    q = q
+
+    // 정렬·범위는 재대입하지 않고 한 번에 체이닝 (타입 에러 방지)
+    const { data, error } = await filtered
       .order("sale_date", { ascending: true })
       .order("order_amount", { ascending: false })
       .range(offset, offset + pageSize - 1);
 
-    const { data, error } = await q;
     if (error) return new Response(`DB error: ${error.message}`, { status: 500 });
-    const batch = (data ?? []) as Record<string, unknown>[];
+
+    const batch = (data ?? []) as unknown as Record<string, unknown>[];
     all.push(...batch);
     if (batch.length < pageSize) break;
     offset += pageSize;
