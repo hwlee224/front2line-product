@@ -20,18 +20,18 @@ type AiInsight = {
 function statusLabel(rate: number | null) {
   if (rate !== null && rate >= 0.2)
     return (
-      <span className="rounded-full bg-[#FFF0EE] px-3 py-1 text-xs font-semibold text-[#E8341C]">
+      <span className="whitespace-nowrap rounded-full bg-[#FFF0EE] px-3 py-1 text-xs font-semibold text-[#E8341C]">
         급상승
       </span>
     );
   if (rate !== null && rate <= -0.2)
     return (
-      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+      <span className="whitespace-nowrap rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
         급하락
       </span>
     );
   return (
-    <span className="rounded-full bg-[#F5F5F5] px-3 py-1 text-xs text-slate-400">
+    <span className="whitespace-nowrap rounded-full bg-[#F5F5F5] px-3 py-1 text-xs text-slate-400">
       유지
     </span>
   );
@@ -613,7 +613,7 @@ export default function Page() {
               <table className="w-full min-w-[1200px] text-sm">
                 <thead className="bg-[#F7F7F5] text-[#888888]">
                   <tr>
-                    <th className="p-3 text-left font-medium">제품명</th>
+                    <th className="p-3 text-left font-medium w-[200px] max-w-[200px]">제품명</th>
                     <th className="p-3 text-right font-medium text-[#E8341C]">A기간 매출</th>
                     <th className="p-3 text-right font-medium text-[#E8341C]">B기간 매출</th>
                     {comparisonMode === "3" && (
@@ -640,34 +640,34 @@ export default function Page() {
                 <tbody>
                   {/* Total row */}
                   <tr className="border-t border-[#ebebeb] bg-[#F7F7F5] font-bold">
-                    <td className="p-3">총매출</td>
-                    <td className="p-3 text-right">{salesMoney(totals.salesA)}</td>
-                    <td className="p-3 text-right">{salesMoney(totals.salesB)}</td>
+                    <td className="p-3 w-[200px] max-w-[200px]">총매출</td>
+                    <td className="p-3 text-right whitespace-nowrap">{salesMoney(totals.salesA)}</td>
+                    <td className="p-3 text-right whitespace-nowrap">{salesMoney(totals.salesB)}</td>
                     {comparisonMode === "3" && (
-                      <td className="p-3 text-right">{salesMoney(totals.salesC)}</td>
+                      <td className="p-3 text-right whitespace-nowrap">{salesMoney(totals.salesC)}</td>
                     )}
-                    <td className={`p-3 text-right ${valueColor(totals.rateAB)}`}>
+                    <td className={`p-3 text-right whitespace-nowrap ${valueColor(totals.rateAB)}`}>
                       {rateText(totals.rateAB)}
                     </td>
-                    <td className={`p-3 text-right ${valueColor(totals.diffAB)}`}>
+                    <td className={`p-3 text-right whitespace-nowrap ${valueColor(totals.diffAB)}`}>
                       {money(totals.diffAB)}
                     </td>
-                    <td className={`p-3 text-right ${valueColor(totals.avgDiffAB)}`}>
+                    <td className={`p-3 text-right whitespace-nowrap ${valueColor(totals.avgDiffAB)}`}>
                       {money(totals.avgDiffAB)}
                     </td>
                     <td className="p-3 text-center">-</td>
                     {comparisonMode === "3" && (
-                      <td className={`p-3 text-right ${valueColor(totals.rateBC)}`}>
+                      <td className={`p-3 text-right whitespace-nowrap ${valueColor(totals.rateBC)}`}>
                         {rateText(totals.rateBC)}
                       </td>
                     )}
                     {comparisonMode === "3" && (
-                      <td className={`p-3 text-right ${valueColor(totals.diffBC)}`}>
+                      <td className={`p-3 text-right whitespace-nowrap ${valueColor(totals.diffBC)}`}>
                         {money(totals.diffBC)}
                       </td>
                     )}
                     {comparisonMode === "3" && (
-                      <td className={`p-3 text-right ${valueColor(totals.avgDiffBC)}`}>
+                      <td className={`p-3 text-right whitespace-nowrap ${valueColor(totals.avgDiffBC)}`}>
                         {money(totals.avgDiffBC)}
                       </td>
                     )}
@@ -680,39 +680,39 @@ export default function Page() {
                       key={row.product}
                       className="border-t border-[#f0f0f0] transition hover:bg-[#FAFAF8]"
                     >
-                      <td className="p-3 font-medium">{row.product}</td>
-                      <td className="p-3 text-right text-[#555]">{salesMoney(row.salesA)}</td>
-                      <td className="p-3 text-right text-[#555]">{salesMoney(row.salesB)}</td>
+                      <td className="p-3 font-medium max-w-[200px] truncate" title={row.product}>{row.product}</td>
+                      <td className="p-3 text-right whitespace-nowrap text-[#555]">{salesMoney(row.salesA)}</td>
+                      <td className="p-3 text-right whitespace-nowrap text-[#555]">{salesMoney(row.salesB)}</td>
                       {comparisonMode === "3" && (
-                        <td className="p-3 text-right text-[#555]">{salesMoney(row.salesC)}</td>
+                        <td className="p-3 text-right whitespace-nowrap text-[#555]">{salesMoney(row.salesC)}</td>
                       )}
-                      <td className={`p-3 text-right font-semibold ${valueColor(row.rateAB)}`}>
+                      <td className={`p-3 text-right whitespace-nowrap font-semibold ${valueColor(row.rateAB)}`}>
                         {rateText(row.rateAB)}
                       </td>
-                      <td className={`p-3 text-right font-semibold ${valueColor(row.diffAB)}`}>
+                      <td className={`p-3 text-right whitespace-nowrap font-semibold ${valueColor(row.diffAB)}`}>
                         {money(row.diffAB)}
                       </td>
-                      <td className={`p-3 text-right font-semibold ${valueColor(row.avgDiffAB)}`}>
+                      <td className={`p-3 text-right whitespace-nowrap font-semibold ${valueColor(row.avgDiffAB)}`}>
                         {money(row.avgDiffAB)}
                       </td>
-                      <td className="p-3 text-center">{statusLabel(row.rateAB)}</td>
+                      <td className="p-3 text-center whitespace-nowrap">{statusLabel(row.rateAB)}</td>
                       {comparisonMode === "3" && (
-                        <td className={`p-3 text-right font-semibold ${valueColor(row.rateBC)}`}>
+                        <td className={`p-3 text-right whitespace-nowrap font-semibold ${valueColor(row.rateBC)}`}>
                           {rateText(row.rateBC)}
                         </td>
                       )}
                       {comparisonMode === "3" && (
-                        <td className={`p-3 text-right font-semibold ${valueColor(row.diffBC)}`}>
+                        <td className={`p-3 text-right whitespace-nowrap font-semibold ${valueColor(row.diffBC)}`}>
                           {money(row.diffBC)}
                         </td>
                       )}
                       {comparisonMode === "3" && (
-                        <td className={`p-3 text-right font-semibold ${valueColor(row.avgDiffBC)}`}>
+                        <td className={`p-3 text-right whitespace-nowrap font-semibold ${valueColor(row.avgDiffBC)}`}>
                           {money(row.avgDiffBC)}
                         </td>
                       )}
                       {comparisonMode === "3" && (
-                        <td className="p-3 text-center">{statusLabel(row.rateBC)}</td>
+                        <td className="p-3 text-center whitespace-nowrap">{statusLabel(row.rateBC)}</td>
                       )}
                     </tr>
                   ))}
