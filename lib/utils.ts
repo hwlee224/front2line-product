@@ -14,10 +14,11 @@ export function rateText(value: number | null | undefined) {
   return (value > 0 ? "+" : "") + rounded + "%";
 }
 
+// 양수 = 초록(상승), 음수 = 레드(하락), 트래픽 라이트 스타일
 export function valueColor(value: number | null | undefined) {
   const num = Number(value || 0);
-  if (num > 0) return "text-[#E8341C]";
-  if (num < 0) return "text-slate-400";
+  if (num > 0) return "text-emerald-600";
+  if (num < 0) return "text-[#E8341C]";
   return "text-[#111111]";
 }
 
@@ -26,18 +27,22 @@ export function guessDateFromFileName(fileName: string) {
   const monthIndex = fileName.indexOf("월");
   const dayIndex = fileName.indexOf("일");
   if (yearIndex < 4 || monthIndex < yearIndex || dayIndex < monthIndex) return "";
+
   const yearText = fileName.slice(yearIndex - 4, yearIndex);
   if (!/^\d{4}$/.test(yearText)) return "";
+
   let monthText = "";
   for (let i = yearIndex + 1; i < monthIndex; i++) {
     const ch = fileName[i];
     if (ch >= "0" && ch <= "9") monthText += ch;
   }
+
   let dayText = "";
   for (let i = monthIndex + 1; i < dayIndex; i++) {
     const ch = fileName[i];
     if (ch >= "0" && ch <= "9") dayText += ch;
   }
+
   if (!monthText || !dayText) return "";
   return yearText + "-" + monthText.padStart(2, "0") + "-" + dayText.padStart(2, "0");
 }
