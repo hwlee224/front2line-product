@@ -311,8 +311,8 @@ export default function Page() {
             <p className="mb-3 text-sm font-semibold tracking-[0.15em] text-[#E8341C]">
               FRONT2LINE · 제품별 매출 트래킹
             </p>
-            <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl">
-              자사몰 제품별<br />기간별 매출 변화 트래킹
+            <h1 className="text-3xl font-bold leading-tight tracking-tight">
+              자사몰 제품별 기간별 매출 변화 트래킹
             </h1>
             <p className="mt-4 text-[#888888]">
               2026년 2월부터 조회 가능 · made by 이혜원 이사 (문의 및 버그 제보 환영)
@@ -326,7 +326,7 @@ export default function Page() {
                 <p className="mb-4 text-xs font-bold tracking-[0.2em] text-[#E8341C]">
                   FRONT2LINE · AI 분석
                 </p>
-                <p className="text-xl font-medium leading-relaxed text-[#111111]">
+                <p className="text-sm font-medium leading-relaxed text-[#111111]">
                   {aiInsight.text}
                 </p>
                 <div className="mt-6 flex items-center justify-between border-t border-[#ebebeb] pt-4">
