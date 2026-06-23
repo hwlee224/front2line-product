@@ -4,15 +4,15 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 function sumSales(rows: any[], start: string, end: string) {
   const map = new Map<string, number>();
   rows
-    .filter((row) => row.sale_date >= start && row.sale_date <= end)
+    .filter((row) => row.date >= start && row.date <= end)
     .forEach((row) => {
       const key = row.normalized_product_name;
-      map.set(key, (map.get(key) || 0) + Number(row.sales_amount || 0));
+      map.set(key, (map.get(key) || 0) + Number(row.revenue || 0));
     });
   return map;
 }
 
-async function fetchAllSalesRows(minDate: string, maxDate: string) {
+async function fetchAllSalesRows(minDate: string, maxDate: string, mergeKeywords: Record<string, string>) {
   const pageSize = 1000;
   let from = 0;
   let allRows: any[] = [];
@@ -20,22 +20,33 @@ async function fetchAllSalesRows(minDate: string, maxDate: string) {
   while (true) {
     const { data, error } = await supabaseAdmin
       .from("daily_product_sales")
-      .select("sale_date, normalized_product_name, sales_amount")
-      .gte("sale_date", minDate)
-      .lte("sale_date", maxDate)
-      .order("sale_date", { ascending: true })
+      .select("date, product_name, revenue")
+      .gte("date", minDate)
+      .lte("date", maxDate)
+      .order("date", { ascending: true })
       .range(from, from + pageSize - 1);
 
     if (error) throw error;
 
-    const rows = data || [];
+    const rows = (data || []).map((row) => ({
+      date: row.date,
+      revenue: row.revenue,
+      normalized_product_name: applyMergeKeywords(row.product_name, mergeKeywords),
+    }));
     allRows = allRows.concat(rows);
 
-    if (rows.length < pageSize) break;
+    if ((data || []).length < pageSize) break;
     from += pageSize;
   }
 
   return allRows;
+}
+
+function applyMergeKeywords(productName: string, mergeKeywords: Record<string, string>): string {
+  for (const [keyword, target] of Object.entries(mergeKeywords)) {
+    if (productName.includes(keyword)) return target;
+  }
+  return productName;
 }
 
 export async function POST(request: Request) {
@@ -43,6 +54,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const comparisonMode = body.comparisonMode === "3" ? "3" : "2";
     const periods = body.periods;
+    const mergeKeywords: Record<string, string> = body.mergeKeywords || {};
 
     const allStarts = [
       periods.A.start,
@@ -59,7 +71,7 @@ export async function POST(request: Request) {
     const minDate = allStarts.sort()[0];
     const maxDate = allEnds.sort().reverse()[0];
 
-    const rows = await fetchAllSalesRows(minDate, maxDate);
+    const rows = await fetchAllSalesRows(minDate, maxDate, mergeKeywords);
 
     const products = Array.from(new Set(rows.map((row) => row.normalized_product_name)));
     const aMap = sumSales(rows, periods.A.start, periods.A.end);
