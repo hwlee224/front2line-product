@@ -316,7 +316,7 @@ export default function Page() {
               자사몰 제품별 기간별 매출 변화 트래킹
             </h1>
             <p className="mt-4 text-[#888888]">
-              2026년 2월부터 조회 가능 · made by 이혜원 이사 (문의 및 버그 제보 환영)
+              2026년 1월부터 조회 가능 · made by 이혜원 이사 (문의 및 버그 제보 환영)
             </p>
           </header>
 
