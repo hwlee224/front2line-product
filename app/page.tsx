@@ -172,6 +172,7 @@ export default function Page() {
       setUploadResults(data.results || []);
       await loadDates();
       await querySales();
+      triggerAnalysis();
     } finally {
       setIsUploading(false);
       event.target.value = "";
@@ -329,18 +330,10 @@ export default function Page() {
                 <p className="text-sm font-medium leading-relaxed text-[#111111]">
                   {aiInsight.text}
                 </p>
-                <div className="mt-6 flex items-center justify-between border-t border-[#ebebeb] pt-4">
+                <div className="mt-6 border-t border-[#ebebeb] pt-4">
                   <p className="text-xs text-[#AAAAAA]">
-                    분석 기준: {new Date(aiInsight.analyzed_at).toLocaleString("ko-KR")}
+                    분석 기준: {new Date(aiInsight.analyzed_at).toLocaleString("ko-KR")} · CSV 업로드 시 자동 갱신
                   </p>
-                  <button
-                    onClick={triggerAnalysis}
-                    disabled={isAnalyzing}
-                    className="flex items-center gap-1.5 text-sm font-semibold text-[#E8341C] transition hover:opacity-70 disabled:opacity-40"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5" />
-                    {isAnalyzing ? "분석 중…" : "새로 분석"}
-                  </button>
                 </div>
               </div>
             ) : (
