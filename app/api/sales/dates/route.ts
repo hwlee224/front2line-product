@@ -9,8 +9,8 @@ async function fetchAllDates() {
   while (true) {
     const { data, error } = await supabaseAdmin
       .from("daily_product_sales")
-      .select("date")
-      .order("date", { ascending: false })
+      .select("sale_date")
+      .order("sale_date", { ascending: false })
       .range(from, from + pageSize - 1);
 
     if (error) throw error;
@@ -28,7 +28,7 @@ async function fetchAllDates() {
 export async function GET() {
   try {
     const data = await fetchAllDates();
-    const uniqueDates = Array.from(new Set(data.map((row) => row.date)));
+    const uniqueDates = Array.from(new Set(data.map((row) => row.sale_date)));
     return NextResponse.json({ dates: uniqueDates });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
