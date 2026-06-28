@@ -4,10 +4,10 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 function sumSales(rows: any[], start: string, end: string) {
   const map = new Map<string, number>();
   rows
-    .filter((row) => row.date >= start && row.date <= end)
+    .filter((row) => row.sale_date >= start && row.sale_date <= end)
     .forEach((row) => {
       const key = row.normalized_product_name;
-      map.set(key, (map.get(key) || 0) + Number(row.revenue || 0));
+      map.set(key, (map.get(key) || 0) + Number(row.sales_amount || 0));
     });
   return map;
 }
@@ -20,17 +20,17 @@ async function fetchAllSalesRows(minDate: string, maxDate: string, mergeKeywords
   while (true) {
     const { data, error } = await supabaseAdmin
       .from("daily_product_sales")
-      .select("date, product_name, revenue")
-      .gte("date", minDate)
-      .lte("date", maxDate)
-      .order("date", { ascending: true })
+      .select("sale_date, product_name, sales_amount")
+      .gte("sale_date", minDate)
+      .lte("sale_date", maxDate)
+      .order("sale_date", { ascending: true })
       .range(from, from + pageSize - 1);
 
     if (error) throw error;
 
     const rows = (data || []).map((row) => ({
-      date: row.date,
-      revenue: row.revenue,
+      sale_date: row.sale_date,
+      sales_amount: row.sales_amount,
       normalized_product_name: applyMergeKeywords(row.product_name, mergeKeywords),
     }));
     allRows = allRows.concat(rows);
