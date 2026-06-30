@@ -12,7 +12,7 @@ function sumSales(rows: any[], start: string, end: string) {
   return map;
 }
 
-async function fetchAllSalesRows(minDate: string, maxDate: string, mergeKeywords: Record<string, string>) {
+async function fetchAllSalesRows(minDate: string, maxDate: string) {
   const pageSize = 1000;
   let from = 0;
   let allRows: any[] = [];
@@ -20,7 +20,7 @@ async function fetchAllSalesRows(minDate: string, maxDate: string, mergeKeywords
   while (true) {
     const { data, error } = await supabaseAdmin
       .from("daily_product_sales")
-      .select("sale_date, product_name, sales_amount")
+      .select("sale_date, normalized_product_name, sales_amount")
       .gte("sale_date", minDate)
       .lte("sale_date", maxDate)
       .order("sale_date", { ascending: true })
@@ -28,12 +28,7 @@ async function fetchAllSalesRows(minDate: string, maxDate: string, mergeKeywords
 
     if (error) throw error;
 
-    const rows = (data || []).map((row) => ({
-      sale_date: row.sale_date,
-      sales_amount: row.sales_amount,
-      normalized_product_name: applyMergeKeywords(row.product_name, mergeKeywords),
-    }));
-    allRows = allRows.concat(rows);
+    allRows = allRows.concat(data || []);
 
     if ((data || []).length < pageSize) break;
     from += pageSize;
@@ -42,19 +37,11 @@ async function fetchAllSalesRows(minDate: string, maxDate: string, mergeKeywords
   return allRows;
 }
 
-function applyMergeKeywords(productName: string, mergeKeywords: Record<string, string>): string {
-  for (const [keyword, target] of Object.entries(mergeKeywords)) {
-    if (productName.includes(keyword)) return target;
-  }
-  return productName;
-}
-
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const comparisonMode = body.comparisonMode === "3" ? "3" : "2";
     const periods = body.periods;
-    const mergeKeywords: Record<string, string> = body.mergeKeywords || {};
 
     const allStarts = [
       periods.A.start,
@@ -71,7 +58,7 @@ export async function POST(request: Request) {
     const minDate = allStarts.sort()[0];
     const maxDate = allEnds.sort().reverse()[0];
 
-    const rows = await fetchAllSalesRows(minDate, maxDate, mergeKeywords);
+    const rows = await fetchAllSalesRows(minDate, maxDate);
 
     const products = Array.from(new Set(rows.map((row) => row.normalized_product_name)));
     const aMap = sumSales(rows, periods.A.start, periods.A.end);
